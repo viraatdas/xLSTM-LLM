@@ -25,3 +25,22 @@ class xLSTMCell(nn.Module):
 
     return h_new, (h_new, c_new)
   
+
+class xLSTM(nn.Module):
+  def __init__(self, input_dim, hidden_dim, num_layers):
+    super(xLSTM, self).__init__()
+    self.layers = nn.ModuleList([xLSTMCell(input_dim if i == 0 else hidden_dim, hidden_dim) for i in range(num_layers)])
+
+    def forward(self, x, hidden=None):
+        if hidden is None:
+            hidden = [(torch.zeros(x.size(0), self.layers[0].hidden_dim, device=x.device),
+                       torch.zeros(x.size(0), self.layers[0].hidden_dim, device=x.device)) for _ in self.layers]
+        
+        h, c = zip(*hidden)
+        for i, layer in enumerate(self.layers):
+            x, new_hc = layer(x, (h[i], c[i]))
+            h[i], c[i] = new_hc
+        
+        return x, list(zip(h, c))
+    
+
