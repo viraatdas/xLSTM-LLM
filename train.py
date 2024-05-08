@@ -44,3 +44,16 @@ class xLSTM(nn.Module):
         return x, list(zip(h, c))
     
 
+class GPT2WithxLSTM(nn.Module):
+    def __init__(self, vocab_size, input_dim, hidden_dim, num_layers):
+        super(GPT2WithxLSTM, self).__init__()
+        self.embed = nn.Embedding(vocab_size, input_dim)
+        self.xlstm = xLSTM(input_dim, hidden_dim, num_layers)
+        self.output_layer = nn.Linear(hidden_dim, vocab_size)
+
+    def forward(self, x, hidden=None):
+        x = self.embed(x)
+        x, hidden = self.xlstm(x, hidden)
+        logits = self.output_layer(x)
+        return logits, hidden
+
